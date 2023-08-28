@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Delay Data Dashboard</title>
+        <link rel="stylesheet" href="style.css" >
+      </head>      
+<body>
+  <h1>Delay Data Dashboard</h1>
+  
+<h2>Add New Delay</h2>
+<form id="addDelayForm">
+  <label for="year">Year:</label>
+  <input type="number" id="year" name="year" required><br>
+
+  <label for="month">Month:</label>
+  <input type="number" id="month" name="month" required><br>
+
+  <label for="carrier">Carrier:</label>
+  <input type="text" id="carrier" name="carrier" required><br>
+
+  <label for="carrier_name">Carrier Name:</label>
+  <input type="text" id="carrier_name" name="carrier_name" required><br>
+
+  <label for="airport">Airport:</label>
+  <input type="text" id="airport" name="airport" required><br>
+
+  <label for="airport_name">Airport Name:</label>
+  <input type="text" id="airport_name" name="airport_name" required><br>
+
+  <label for="arr_flights">Arrival Flights:</label>
+  <input type="number" id="arr_flights" name="arr_flights" required><br>
+
+  <label for="arr_del15">Arrival Delayed > 15 Min:</label>
+  <input type="number" id="arr_del15" name="arr_del15" required><br>
+
+  <label for="carrier_ct">Flights delayed due to carrier:</label>
+  <input type="number" id="carrier_ct" name="carrier_ct" required><br>
+
+  <label for="weather_ct">Flights delayed dut to Weather:</label>
+  <input type="number" id="weather_ct" name="weather_ct" required><br>
+
+  <label for="nas_ct">Flights delayed due to NAS:</label>
+  <input type="number" id="nas_ct" name="nas_ct" required><br>
+
+  <label for="security_ct">Flights delayed due to security:</label>
+  <input type="number" id="security_ct" name="security_ct" required><br>
+
+  <label for="late_aircraft_ct">Late Aircraft Delay:</label>
+  <input type="number" id="late_aircraft_ct" name="late_aircraft_ct" required><br>
+
+  <label for="arr_cancelled">Cancelled Arrivals:</label>
+  <input type="number" id="arr_cancelled" name="arr_cancelled" required><br>
+
+  <label for="arr_diverted">Diverted Arrivals:</label>
+  <input type="number" id="arr_diverted" name="arr_diverted" required><br>
+
+  <label for="arr_delay">Total Arrival Delay:</label>
+  <input type="number" id="arr_delay" name="arr_delay" required><br>
+
+  <label for="carrier_delay">Carrier Delay:</label>
+  <input type="number" id="carrier_delay" name="carrier_delay" required><br>
+
+  <label for="weather_delay">Weather Delay:</label>
+  <input type="number" id="weather_delay" name="weather_delay" required><br>
+
+  <label for="nas_delay">NAS Delay:</label>
+  <input type="number" id="nas_delay" name="nas_delay" required><br>
+
+  <label for="security_delay">Security Delay:</label>
+  <input type="number" id="security_delay" name="security_delay" required><br>
+
+  <label for="late_aircraft_delay">Late Aircraft Delay:</label>
+  <input type="number" id="late_aircraft_delay" name="late_aircraft_delay" required><br>
+  
+  <button type="submit">Add Delay</button>
+</form>
+
+  
+  <!-- Form to Filter Delays -->
+  <h2>Filter Delays</h2>
+  <form id="filterForm">
+    <label for="filterCarrier">Carrier:</label>
+    <input type="text" id="filterCarrier" name="carrier">
+    <label for="filterAirport">Airport:</label>
+    <input type="text" id="filterAirport" name="airport">
+    <button type="submit">Filter</button>
+  </form>
+  
+  <!-- Table to Display Delay Data -->
+  <h2>Delay Data</h2>
+  <table id="delayTable">
+    <thead>
+      <tr>
+        <th>Year</th>
+        <th>Month</th>
+        <th>Carrier</th>
+        <th>Carrier Name</th>
+        <th>Airport</th>
+        <th>Airport Name</th>
+        <th>Arrival Flights</th>
+        <th>Arrival Delayed > 15 Min</th>
+        <th>Flights delayed due to carrier:</th>
+        <th>Flights delayed dut to Weather:</th>
+        <th>Flights delayed due to NAS:</th>
+        <th>Flights delayed due to security:</th>
+        <th>Late Aircraft Delay</th>
+        <th>Cancelled Arrivals</th>
+        <th>Diverted Arrivals</th>
+        <th>Total Arrival Delay</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <!-- Delay data rows will be added here using JavaScript -->
+    </tbody>
+  </table>
+
+  <script>
+    const delayTable = document.getElementById("delayTable");
+    const addDelayForm = document.getElementById("addDelayForm");
+    const filterForm = document.getElementById("filterForm");
+    const tableBody = document.getElementById("tableBody");
+
+    function createTableRow(delay) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${delay.year}</td>
+        <td>${delay.month}</td>
+        <td>${delay.carrier}</td>
+        <td>${delay.carrier_name}</td>
+        <td>${delay.airport}</td>
+        <td>${delay.airport_name}</td>
+        <td>${delay.arr_flights}</td>
+        <td>${delay.arr_del15}</td>
+        <td>${delay.carrier_delay}</td>
+        <td>${delay.weather_delay}</td>
+        <td>${delay.nas_delay}</td>
+        <td>${delay.security_delay}</td>
+        <td>${delay.late_aircraft_delay}</td>
+        <td>${delay.arr_cancelled}</td>
+        <td>${delay.arr_diverted}</td>
+        <td>${delay.arr_delay}</td>
+        <td><button data-id="${delay._id}" class="deleteBtn">Delete</button></td>
+      `;
+      tableBody.appendChild(row);
+
+      //add event listener for the delete button
+      const deleteBtn = row.querySelector(".deleteBtn");
+      deleteBtn.addEventListener("click", async () => {
+        const id = deleteBtn.getAttribute("data-id");
+        await deleteDelay(id);
+      });
+    }
+
+    async function fetchAndDisplayDelays() {
+      const response = await fetch("http://localhost:3000/delayData");
+      const data = await response.json();
+
+      data.forEach(delay => {
+        createTableRow(delay);
+      });
+    }
+
+    async function deleteDelay(id) {
+     
+        try {
+        const response = await fetch(`http://localhost:3000/delayData/${id}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          //emove deleted data from the table
+          const row = tableBody.querySelector(`[data-id="${id}"]`).parentNode.parentNode;
+          row.remove();
+        } else {
+          console.error("Error deleting delay data");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    }
+
+  addDelayForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  
+  //create FormData from the form
+  const formData = new FormData(addDelayForm);
+  
+  //convert it object
+  const delayData = {};
+  formData.forEach((value, key) => {
+    delayData[key] = value;
+  });
+  
+  try {
+    //send post request to add new data
+    const response = await fetch("http://localhost:3000/delayData", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(delayData),
+    });
+
+    if (response.ok) {
+      //clear the form after submission
+      addDelayForm.reset();
+      
+      //refresh the table
+      await fetchAndDisplayDelays();
+    } else {
+      console.error("Error adding delay data");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  }
+});
+
+  filterForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  
+  //get filter values
+  const filterCarrier = document.getElementById("filterCarrier").value;
+  const filterAirport = document.getElementById("filterAirport").value;
+  
+  //fetch filtered data from the server
+  const response = await fetch(`http://localhost:3000/delayData/filter?carrier=${filterCarrier}&airport=${filterAirport}`);
+  const filteredData = await response.json();
+  
+  //clear existing table rows
+  tableBody.innerHTML = "";
+  
+  //display filtered data in the table
+  filteredData.forEach(delay => {
+    createTableRow(delay);
+  });
+});
+
+    fetchAndDisplayDelays();
+  </script>
+</body>
+</html>
